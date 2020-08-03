@@ -1,0 +1,56 @@
+# Created by the script cgal_create_CMakeLists
+# This is the CMake script for compiling a set of CGAL applications.
+
+cmake_minimum_required(VERSION 3.1...3.15)
+
+project( metasurfaces )
+
+
+# CGAL and its components
+find_package( CGAL QUIET COMPONENTS  )
+
+FIND_PACKAGE( pybind11 REQUIRED )
+FIND_PACKAGE(Eigen3 REQUIRED )
+
+#INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
+include_directories( ${EIGEN3_INCLUDE_DIR} )
+
+FIND_PACKAGE(PythonInterp 3)
+FIND_PACKAGE(PythonLibs   3)
+
+if ( NOT CGAL_FOUND )
+
+  message(STATUS "This project requires the CGAL library, and will not be compiled.")
+  return()  
+
+endif()
+
+
+# Boost and its components
+find_package( Boost REQUIRED )
+
+if ( NOT Boost_FOUND )
+
+  message(STATUS "This project requires the Boost library, and will not be compiled.")
+
+  return()  
+
+endif()
+
+# include for local directory
+
+# include for local package
+
+
+# Creating entries for all C++ files with "main" routine
+# ##########################################################
+
+
+include(${CGAL_USE_FILE})
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+pybind11_add_module(pypower pypower.cpp)
+target_link_libraries(pypower PRIVATE ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
+#create_single_source_cgal_program( "power.cpp" )
+
+
