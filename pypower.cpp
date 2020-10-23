@@ -77,8 +77,8 @@ power_diagram(const Eigen::MatrixXd &X, const Eigen::VectorXd &w)
   // domain is defined by A x <= b
   std::vector<Vector> A;
   std::vector<double> b;
-  A.push_back(Vector(0,0,1));  b.push_back(1);
-  A.push_back(Vector(0,0,-1)); b.push_back(1);
+  A.push_back(Vector(0,0,1));  b.push_back(100);
+  A.push_back(Vector(0,0,-1)); b.push_back(100);
   A.push_back(Vector(0,1,0));  b.push_back(1);
   A.push_back(Vector(0,-1,0)); b.push_back(1);
   A.push_back(Vector(1,0,0));  b.push_back(1);
@@ -131,7 +131,8 @@ power_diagram(const Eigen::MatrixXd &X, const Eigen::VectorXd &w)
 	      break;
 	    }
 	}
-
+      if (it_loc == 0)
+	continue;
       // ... and we tessellate the facets of the power cell of p0
       std::list<Rt::Vertex_handle> vertices_loc;
       rt_loc.incident_vertices(it_loc, std::back_inserter(vertices_loc));
