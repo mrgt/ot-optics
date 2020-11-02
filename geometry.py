@@ -32,6 +32,13 @@ class Quadric:
         sqrtDelta = np.sqrt(Delta)
         return [(-B+sqrtDelta)/(2*A), (-B-sqrtDelta)/(2*A)]
 
+    #    A = np.dot(v,self.Q@v)
+    #    B = 2*np.dot(a,self.Q@v) + np.dot(self.b,v)
+    #    C = self.c + np.dot(self.b,a) + np.dot(a,self.Q@a)
+    # B^2 - 4 AC = 4A(B^2/4A - C)
+    #            = 4A((2<a|Qv> + <b|v>)**2/4A - C)
+    # (2<a|Qv> + <b|v>)**2 = 4 <a|Qv>**2 = 
+    
     # computes the intersection of the quadric with the segment [p,q], i.e.
     # points of the form (1-t) p + t q with t in [0,1]
     # returns the values of t corresponding to the intersection(s)
@@ -54,12 +61,15 @@ class Quadric:
     
     # returns a curve corresponding to the intersection of the triangle [p,q,bary] with the quadric
     # assumption: quad(p) = quad(q) = 0, quad(bary)>0
-    def trace_curve(self, p, q, bary,N):
-        p = p + 0.1*(bary-p)
-        q = q + 0.1*(bary-q)
+    def trace_curve(self, p, q, bary, N):
         R = np.zeros((N,3))
         h = 1.0/(N-1)
-        for i in range(0,N):
+        R[0] = p
+        R[-1] = q
+        p = p + 0.1*(bary-p)
+        q = q + 0.1*(bary-q)
+        for i in range(1,N-1):
+            print(i)
             a = (1-i*h)*p+i*h*q
             #print("qa=%g, qb =%g"%(self(a), self(bary)))
             R[i] = self.compute_first_intersection(a, a-bary)
@@ -95,7 +105,7 @@ def find_point_above_quadric_in_polygon(quad, P):
         q1 = P[v] + T[0]*(P[w] - P[v])
         q2 = P[v] + T[1]*(P[w] - P[v])
         above = (q1+q2)/2 + 1e-7*(np.mean(P,0) - P[v,:])
-        if (quad(above) < 0):
+        if (quad(above) <= 0):
             continue # segment is barely above....
             #print("quad(above)={}".format(quad(above)))
             #print("quad(q1)={}".format(quad(q1)))
@@ -108,6 +118,7 @@ def find_point_above_quadric_in_polygon(quad, P):
     
     # otherwise, the polygon does not intersect the quadric
     # BEWARE: we are neglecting the possibility that P intersects quad in its interior only...
+    print("found no point above")
     return None
 
 # intersects the triangle [v,w,above] with the quadric
@@ -115,6 +126,8 @@ def find_point_above_quadric_in_polygon(quad, P):
 def intersect_triangle_with_quadric(quad, v, w, above, N=10):
     signv = np.sign(quad(v))
     signw = np.sign(quad(w))
+    print("v = {}, signv = {}".format(v,signv))
+    print("w = {}, signw = {}".format(w,signw))
     if (signv == 1) and (signw == 1): # everything is above: nothing to do
         return []
     elif (signv == 1) and (signw == -1): 
@@ -160,7 +173,7 @@ def intersect_polygon_with_quadric(P,quad,N=10):
     curves = []
     for v in range(nv):
         w = (v+1)%nv
-        curves += intersect_triangle_with_quadric(quad, P[v], P[w], above)
+        curves += intersect_triangle_with_quadric(quad, P[v], P[w], above, N)
     return curves        
 
 
