@@ -301,12 +301,12 @@ intersect_ray_with_quadric (NT qxx, NT qyy, NT qzz, // diagonal
   NT C = c + bx*x0 + by*y0 + bz*z0 + qxx*x0*x0 + qyy*y0*y0 + qzz*z0*z0;
 
   std::vector<SNT> res;
-  DEBUG_SHOW(A);
+  //DEBUG_SHOW(A);
   if(CGAL::abs(A)>1e-10) // ugly
     {      
       NT Delta = B*B - NT(4)*A*C;
-      std::cerr << "non-linear case" << "\n";
-      DEBUG_SHOW(Delta);
+      //std::cerr << "non-linear case" << "\n";
+      //DEBUG_SHOW(Delta);
       if (Delta >= 0)
 	{
 	  auto sqrtDelta = Sqrt<NT>::make_sqrt(Delta);
@@ -323,8 +323,8 @@ intersect_ray_with_quadric (NT qxx, NT qyy, NT qzz, // diagonal
     }
   else   //  linear case
     {
-      std::cerr << "linear case\n";
-      DEBUG_SHOW(B);
+      //std::cerr << "linear case\n";
+      // DEBUG_SHOW(B);
       if (B > 0 || B < 0)
 	{
 	  auto r = -C/B;

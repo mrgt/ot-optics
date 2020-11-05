@@ -210,3 +210,12 @@ def intersect_cell_with_quadric(X, cell, quad, k = 10):
         P = np.array(P)
         curves[j] = intersect_polygon_with_quadric(P,quad,k)
     return curves
+
+
+def volume_of_cell(cell):
+    vol = 0
+    for j,P in cell.items(): # iterate over all facets
+        P = np.array(P)
+        for k in range(1,P.shape[0]-1):
+            vol += np.linalg.det(np.array([P[0], P[k], P[k+1]]))/6
+    return vol
