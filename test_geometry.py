@@ -1,9 +1,19 @@
 from geometry import *
 
 
+def make_power(X,w):
+    A = np.array([[0,0,1],
+                  [0,0,-1],
+                  [0,1,0],
+                  [0,-1,0],
+                  [1,0,0],
+                  [-1,0,0]])
+    b = np.array([100,100,1,1,1,1])
+    return pypower.power_diagram(X,w,A,b)
+
 def areas_of_power_diagram_quadric_intersection(X,w,quad):
     N = len(w)
-    cells = pypower.power_diagram(X,w)
+    cells = make_power(X,w)
     areas = np.zeros(N)
     for i in range(N):
         curves = intersect_cell_with_quadric(X,cells[i],quad,20)
