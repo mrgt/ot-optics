@@ -37,8 +37,6 @@ class Quadric:
                                                self.d,
                                                a[0], a[1], a[2],
                                                v[0], v[1], v[2])
-        #for s in S:
-        #    print("quad(a+sv) = {}".format(self(a+s*v)));
         return np.array(S)
             
     
@@ -54,15 +52,6 @@ class Quadric:
                                                    self.d,
                                                    p[0], p[1], p[2],
                                                    q[0], q[1], q[2])
-        for s in S:
-            if np.abs(self(p+s*(q-p))) < 1e-3:
-                continue
-            print("quad(p+s(q-p)) = {}".format(self(p+s*(q-p))));
-            np.set_printoptions(precision=None)
-            print(repr(p))
-            print(repr(q))
-            print(s)
-
         return np.array(S)
     
     # find the first intersection point of the quadric with the ray a+tv, t>=0 
@@ -81,9 +70,6 @@ class Quadric:
     # returns a curve corresponding to the intersection of the triangle [p,q,bary] with the quadric
     # assumption: quad(p) = quad(q) = 0, quad(bary)>0
     def trace_curve(self, p, q, bary, k):
-        # print("trace_curve: self(p) = {}".format(self(p)))
-        # print("trace_curve: self(q) = {}".format(self(q)))
-        # print("trace_curve: self(bary) = {}".format(self(bary)))
         R = np.zeros((k,3))
         h = 1.0/(k-1)
         R[0] = p
@@ -92,7 +78,6 @@ class Quadric:
         q = q + 1e-5*(bary-q)
         for i in range(1,k-1):
             a = (1-i*h)*p+i*h*q
-            #print("qa=%g, qb =%g"%(self(a), self(bary)))
             R[i] = self.compute_first_intersection(a, a-bary)
         return R
 
@@ -128,12 +113,6 @@ def find_point_above_quadric_in_polygon(quad, P):
         above = (q1+q2)/2 + 1e-7*(np.mean(P,0) - P[v,:])
         if (quad.relative_position(above) <= 0):
             continue # segment is barely above....
-            #print("quad(above)={}".format(quad(above)))
-            #print("quad(q1)={}".format(quad(q1)))
-            #print("quad(q2)={}".format(quad(q2)))
-            #print("q1={}".format(q1))
-            #print("q2={}".format(q2))
-            #print("T={}".format(T))
         assert(quad.relative_position(above)>0)
         return above
     
@@ -147,8 +126,6 @@ def find_point_above_quadric_in_polygon(quad, P):
 def intersect_triangle_with_quadric(quad, v, w, above, k=10):
     signv = quad.relative_position(v)
     signw = quad.relative_position(w)
-    #print("v = {}, signv = {}".format(v,signv))
-    #print("w = {}, signw = {}".format(w,signw))
     if (signv == 1) and (signw == 1): # everything is above: nothing to do
         return []
     elif (signv == 1) and (signw == -1): 
@@ -160,10 +137,6 @@ def intersect_triangle_with_quadric(quad, v, w, above, k=10):
     elif signv == -1 and signw == 1: 
         p = quad.compute_first_intersection(v, above-v)
         T = quad.intersect_with_segment(v, w)
-        if len(T) != 1:
-            print(T)
-            print(quad.relative_position(v))
-            print(quad.relative_position(w))
         assert(len(T) == 1)
         q = v + T[0]*(w - v)
         return [quad.trace_curve(p,q,above,k)]
