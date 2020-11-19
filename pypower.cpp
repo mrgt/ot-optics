@@ -200,8 +200,8 @@ point_above_quadric(NT qxx, NT qyy, NT qzz, // diagonal
     }
   else
     {
-      std::cerr << "paq: "
-		<< CGAL::to_double(qxx*x*x + qyy*y*y + qzz*z*z + bx*x + by*y + bz*z + c) << "\n";
+      // std::cerr << "paq: "
+      // 		<< CGAL::to_double(qxx*x*x + qyy*y*y + qzz*z*z + bx*x + by*y + bz*z + c) << "\n";
       return CGAL::sign(qxx*x*x + qyy*y*y + qzz*z*z + bx*x + by*y + bz*z + c);
     }
 }
@@ -302,7 +302,7 @@ intersect_ray_with_quadric (NT qxx, NT qyy, NT qzz, // diagonal
 
   std::vector<SNT> res;
   //DEBUG_SHOW(A);
-  if(CGAL::abs(A)>1e-10) // ugly
+  if(CGAL::abs(A) > 1e-7) // ugly
     {      
       NT Delta = B*B - NT(4)*A*C;
       //std::cerr << "non-linear case" << "\n";

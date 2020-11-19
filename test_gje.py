@@ -38,6 +38,8 @@ DH = lambda psi: compute_H_DH_from_mobius(Y, psi, make_mobius(Y, psi, k=100))[1]
 psi = 0.1 *(np.ones(N) + 0.01 * np.array([0.1, 0.6, -0.1, 1.7, -0.6]))
 print("twist = ",test_twist(Y, psi))
 np.set_printoptions(2)
+
+psi = 0.1*np.ones(N)
 check_gradient(H,DH,psi)
 
 M = make_mobius(Y, psi, k=100)
