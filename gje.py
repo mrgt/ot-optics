@@ -98,25 +98,38 @@ def compute_H_DH_from_mobius(Y, psi, allcurves):
 def compute_H_DH(Y, psi):
     return compute_H_DH_from_mobius(Y, psi, make_mobius(Y, psi))
 
-def solve_gje(Y, psi, stoperr=1e-8, threshold = 1e-12):
+def solve_gje(Y, psi, nu = [], stoperr=1e-4, threshold = 1e-12):
     N = len(psi)
-    nu = (4/N) * np.ones(N)
+    if nu == []:
+        nu = (4/N) * np.ones(N)
+    if len(nu) != N or len(Y) != N:
+        print("ERROR : Y, psi and nu must be arrays of the same size")
+        return
     h,dh = compute_H_DH(Y, psi)
     err = np.linalg.norm(h - nu)
     it = 0
+    print("it={}, error={}, tau={} \n".format(it,err,1))
     while err > stoperr:
-        t = 1
-        print("h = {}".format(h))
-        print("it={}, error={}, tau={}".format(it,err,t))
         it += 1
-        dh[0,0] += 1 #Astuce detaillée dans la preuve de convergence
-        u = np.linalg.solve(dh, h - nu)
+        t = 1
+        h = h[0:N-1] # les 4 lignes suivantes servent à supprimer la derniere ligne et colonne du systeme en fixant u[N-1] = 0
+        dh = dh[0:N-1, 0:N-1]
+        u = np.zeros(N)
+        u[0:N-1] = np.linalg.solve(dh, h - nu[0:N-1])
+        #dh[0,0] += 1 #Astuce detaillée dans la preuve de convergence
+        #u = np.linalg.solve(dh, h - nu)
+        det = abs(np.linalg.det(dh))
+        if det < 1:
+            print("Warning : |det(DH[0:N-1])| = ", det, "\n")
         psi -=  u     
         h,dh = compute_H_DH(Y, psi)
-        while min(h) < threshold:
+        newerr = np.linalg.norm(h - nu)
+        while min(h) < threshold or newerr > err:
             t /= 2
             psi += t * u
             h,dh = compute_H_DH(Y, psi)
-        err = np.linalg.norm(h - nu)
+            newerr = np.linalg.norm(h - nu)
+        err = newerr
+        print("it={}, error={}, tau={} \n".format(it,err,t))
     return psi
 
