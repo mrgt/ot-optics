@@ -118,9 +118,6 @@ def solve_gje(Y, psi, nu = [], stoperr=1e-4, threshold = 1e-12):
         u[0:N-1] = np.linalg.solve(dh, h - nu[0:N-1])
         #dh[0,0] += 1 #Astuce detaillée dans la preuve de convergence
         #u = np.linalg.solve(dh, h - nu)
-        det = abs(np.linalg.det(dh))
-        if det < 1:
-            print("Warning : |det(DH[0:N-1])| = ", det, "\n")
         psi -=  u     
         h,dh = compute_H_DH(Y, psi)
         newerr = np.linalg.norm(h - nu)
