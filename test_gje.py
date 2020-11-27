@@ -176,7 +176,7 @@ def compare_mobius(M,N,Y=[]):
 # print("H = ",h)
 # print("DH = ", dh)
 # print("det(DH) =", np.linalg.det(dh), "det(DH + e_1,1) =", np.linalg.det(dh2))
-#--------------------------------------------------------------------------------
+
 
 # plot_random_mobius(50)
 
@@ -185,7 +185,5 @@ def compare_mobius(M,N,Y=[]):
 # psi = test_newton_random(50, 50)
 
 psi = test_newton_uniform(50, 50)
-
-
 
 plt.show()
