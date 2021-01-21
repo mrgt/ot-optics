@@ -7,7 +7,10 @@ import pypower
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 
-
+"""
+This code is dedicated to solve the Near Field parallel reflector problem using a damped newton algorithm,
+The source is fixed, it is the square [-1,1]^2 with a uniform measure.
+"""
 
 
 def mob_to_pow(y, psi):
@@ -48,7 +51,7 @@ def g(x,y_i,y_j,psi_i, psi_j):
 
 
 def test_twist(Y, psi):
-    """ Test the twist assumption on psi for NF-parallel reflector, whice is psi_i < gamma = inf 1 / ||x - y|| """
+    """ Test the twist assumption on psi for NF-parallel reflector, which is psi_i < gamma = inf 1 / ||x - y|| """
     x = np.array([[1,1], [-1,1],[-1,-1], [1, -1]])
     N = len(Y)
     Y1 = np.copy(Y)
@@ -70,6 +73,8 @@ def test_twist(Y, psi):
         if psi[i] > m:
             return False
     return True
+
+
 
 def compute_H_DH_from_mobius(Y, psi, allcurves):
     """Computes H and DH from a mobius diagram stored in allcurves"""
@@ -98,35 +103,49 @@ def compute_H_DH_from_mobius(Y, psi, allcurves):
 def compute_H_DH(Y, psi):
     return compute_H_DH_from_mobius(Y, psi, make_mobius(Y, psi))
 
-def solve_gje(Y, psi, nu = [], stoperr=1e-4, threshold = 1e-12):
+def solve_gje(Y, psi, nu = [], stoperr=1e-6, verb = True, threshold = 1e-18, maxit = 50):
+    """Resolution of Generated Jacobian equation using damped Newton algorithm"""
     N = len(psi)
     if nu == []:
-        nu = (4/N) * np.ones(N)
+        nu = (4/N) * np.ones(N) #if no measure where given we chose it to be uniform
     if len(nu) != N or len(Y) != N:
         print("ERROR : Y, psi and nu must be arrays of the same size")
-        return
+        return [[]]
     h,dh = compute_H_DH(Y, psi)
-    err = np.linalg.norm(h - nu)
+    delta = min(min(h), min(nu))/2
+    err = np.linalg.norm(h - nu, 1)
     it = 0
-    print("it={}, error={}, tau={} \n".format(it,err,1))
+    iterations = [0]
+    errors = [err]
+    if verb:
+        print("it={}, error={}, delta={} \n".format(it,err,delta))
     while err > stoperr:
+        if it > maxit:
+            print("Newton failed to converge \n")
+            print("min height = ", min_height(Y, psi))
+            return [[]]
         it += 1
         t = 1
         h = h[0:N-1] # les 4 lignes suivantes servent à supprimer la derniere ligne et colonne du systeme en fixant u[N-1] = 0
         dh = dh[0:N-1, 0:N-1]
         u = np.zeros(N)
         u[0:N-1] = np.linalg.solve(dh, h - nu[0:N-1])
-        #dh[0,0] += 1 #Astuce detaillée dans la preuve de convergence
-        #u = np.linalg.solve(dh, h - nu)
-        psi -=  u     
+        psi -=  u
         h,dh = compute_H_DH(Y, psi)
-        newerr = np.linalg.norm(h - nu)
-        while min(h) < threshold or newerr > err:
+        newerr = np.linalg.norm(h - nu, 1)
+        while min(h) < delta or newerr > err:
             t /= 2
             psi += t * u
             h,dh = compute_H_DH(Y, psi)
-            newerr = np.linalg.norm(h - nu)
+            newerr = np.linalg.norm(h - nu, 1)
+            if t < threshold:
+                print("Newton failed to converge \n")
+                print("min height = ", min_height(Y, psi))
+                return [[]]
         err = newerr
-        print("it={}, error={}, tau={} \n".format(it,err,t))
-    return psi
+        if verb:
+            print("it={}, error={}, tau={} \n".format(it,err,t))
+        errors.append(err)
+        iterations.append(it)
+    return [psi, iterations, errors]
 
