@@ -38,7 +38,7 @@ def random_setup(N = 10):
 	nu =  4 * nu / np.linalg.norm(nu, 1)
 	return Y, nu
 
-def test_newton(Y, nu, plot = False, verb = True, stoperr = 1e-6, k = 20):
+def test_newton(Y, nu, plot = False, verb = True, stoperr = 1e-6, eps = 0.01):
 	"""
 	Tries solving NF parallel reflector problem  with source [-1,1]^2 associated with Lebesgue measure and target space Y and measure nu
 	Variable plot set to True will plot the initial and final mobius diagram if the algorithm converges , verb = True will print the error
@@ -48,11 +48,11 @@ def test_newton(Y, nu, plot = False, verb = True, stoperr = 1e-6, k = 20):
 	N = len(Y)
 	psi = 0.004 * np.ones(N) #psi is chosen of the form lambda * np.ones(N) to ensure that none of the cells is empty. The value of lambda is arbitrary.
 	print("twist = ", test_twist(Y, psi))
-	M0 = make_mobius(Y, psi, k)
+	M0 = make_mobius(Y, psi, eps=eps)
 	result = solve_gje(Y, psi, nu, stoperr, verb)
 	psi = result[0]
 	if plot:
-		M = make_mobius(Y, psi, k)
+		M = make_mobius(Y, psi, eps=eps)
 		if N <= 100:
 			compare_mobius(M0,M,Y)
 		else:

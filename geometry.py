@@ -69,18 +69,22 @@ class Quadric:
     
     # returns a curve corresponding to the intersection of the triangle [p,q,bary] with the quadric
     # assumption: quad(p) = quad(q) = 0, quad(bary)>0
-    def trace_curve(self, p, q, bary, k):
-        R = np.zeros((k,3))
-        h = 1.0/(k-1)
-        R[0] = p
-        R[-1] = q
-        p = p + 1e-5*(bary-p)
-        q = q + 1e-5*(bary-q)
-        for i in range(1,k-1):
-            a = (1-i*h)*p+i*h*q
-            R[i] = self.compute_first_intersection(a, a-bary)
-        return R
-
+    def trace_curve(self, p, q, bary, eta):
+        if np.linalg.norm(p-q) <= eta:
+            return [p,q]
+        m = (p+q)/2
+        b = self.compute_first_intersection(m, m - bary)
+        # t = self.intersect_with_segment(bary, m)
+        # if len(t) != 1:
+        #     print("qq=%g"%self(q))
+        #     print("qp=%g"%self(p))
+        #     print("qm=%g"%self(m))
+        #     print("qbary=%g"%self(bary))
+        #     print(t)
+        # assert(len(t) == 1)
+        # b = (1 - t[0]) * bary + t[0] * m
+        return (self.trace_curve(p, b, bary, eta) +
+                self.trace_curve(b, q, bary, eta))
 
 def find_point_above_quadric_in_polygon(quad, P):
     nv = len(P)
@@ -123,7 +127,7 @@ def find_point_above_quadric_in_polygon(quad, P):
 
 # intersects the triangle [v,w,above] with the quadric
 # assumption: quad(above) > 0
-def intersect_triangle_with_quadric(quad, v, w, above, k=10):
+def intersect_triangle_with_quadric(quad, v, w, above, eta):
     signv = quad.relative_position(v)
     signw = quad.relative_position(w)
     if (signv == 1) and (signw == 1): # everything is above: nothing to do
@@ -133,31 +137,31 @@ def intersect_triangle_with_quadric(quad, v, w, above, k=10):
         assert len(T) == 1
         p = v + T[0]*(w - v)
         q = quad.compute_first_intersection(w, above-w)
-        return [quad.trace_curve(p,q,above,k)]
+        return [quad.trace_curve(p,q,above,eta)]
     elif signv == -1 and signw == 1: 
         p = quad.compute_first_intersection(v, above-v)
         T = quad.intersect_with_segment(v, w)
         assert(len(T) == 1)
         q = v + T[0]*(w - v)
-        return [quad.trace_curve(p,q,above,k)]
+        return [quad.trace_curve(p,q,above,eta)]
     elif signv == -1 and signw == -1: 
         pv = quad.compute_first_intersection(v, above-v)
         pw = quad.compute_first_intersection(w, above-w)
         T = quad.intersect_with_segment(v, w)
         if len(T) == 0:
             # all the segment is below the quadric
-            return [quad.trace_curve(pv,pw, above, k)]
+            return [quad.trace_curve(pv,pw, above, eta)]
         
         assert len(T) == 2, "T={}".format(T)
         q1 = v + T[0]*(w - v)
         q2 = v + T[1]*(w - v)
-        return [quad.trace_curve(pv,q1,above,k),
-                quad.trace_curve(q2,pw,above,k)]
+        return [quad.trace_curve(pv,q1,above,eta),
+                quad.trace_curve(q2,pw,above,eta)]
 
 # returns the intersection between the polygon P with the quadric 
 # assumption: P is flat, i.e. contained in a plane
 # returns a list of curves (list of numpy arrays) describing the intersection
-def intersect_polygon_with_quadric(P,quad, k=10):
+def intersect_polygon_with_quadric(P,quad, eta):
     nv = len(P)
     
     # find point above quadric in P; if there is no such point, intersection is empty
@@ -170,18 +174,18 @@ def intersect_polygon_with_quadric(P,quad, k=10):
     curves = []
     for v in range(nv):
         w = (v+1)%nv
-        curves += intersect_triangle_with_quadric(quad, P[v], P[w], above, k)
+        curves += intersect_triangle_with_quadric(quad, P[v], P[w], above, eta)
     return curves        
 
 
 # computes the intersection of a cell = cell[i] of a Power diagram with the quadric
 # returns a dictionnary mapping a neighbor j to a list of curves Pow_i \cap Pow_j \cap quad, 
 # as returned by intersect_polygon_with_quadric
-def intersect_cell_with_quadric(X, cell, quad, k = 10):
+def intersect_cell_with_quadric(X, cell, quad, eta):
     curves = {}
     for j,P in cell.items(): # iterate over all facets
         P = np.array(P)
-        curves[j] = intersect_polygon_with_quadric(P,quad,k)
+        curves[j] = intersect_polygon_with_quadric(P,quad, eta)
     return curves
 
 

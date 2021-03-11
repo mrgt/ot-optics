@@ -26,7 +26,7 @@ def G(x,y,v):
     """Generating function for NF-par"""
     return 1 / (2*v) - (v/2)*np.linalg.norm(x - y)**2
 
-def make_mobius(Y, psi, k = 20):
+def make_mobius(Y, psi, eps = 0.01):
     """return the Mobius diagram associated to the cost G defined above"""
     quad = Quadric(np.array([-1,-1,0]), np.array([0,0,1]), 0)
     N = len(Y)
@@ -39,7 +39,7 @@ def make_mobius(Y, psi, k = 20):
     cells = make_power(X,w)
     curves = []
     for i in range(N):
-        c = intersect_cell_with_quadric(X,cells[i],quad,k)
+        c = intersect_cell_with_quadric(X,cells[i],quad,eps)
         curves.append(c)
     return curves
 

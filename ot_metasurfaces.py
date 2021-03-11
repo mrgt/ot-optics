@@ -27,7 +27,7 @@ def make_hyperboloid(p, bi, beta):
     return Quadric(Q,b=-2*Q*R,c=np.dot(Q*R,R) - beta**2,
                    truncating_plane=True,p=np.array([0,0,1]),d=-bi)
 
-def make_laguerre(Y, psi, beta, k=20):
+def make_laguerre(Y, psi, beta, eps=0.01):
     N = len(Y)
     X = np.zeros((N,3))
     X[:,0:2] = Y
@@ -38,11 +38,11 @@ def make_laguerre(Y, psi, beta, k=20):
     curves = []
     for i in range(N):
         quad = make_hyperboloid(Y[i], psi[i], beta)
-        c = intersect_cell_with_quadric(X,cells[i],quad,k)
+        c = intersect_cell_with_quadric(X,cells[i],quad,eps)
         curves.append(c)
     return curves
 
-def plot_laguerre_cell(curves):
+def plot_laguerre_cell(curves, linewidth):
     area = 0
     for j,curvesj in curves.items():
         for crv in curvesj:
@@ -51,13 +51,13 @@ def plot_laguerre_cell(curves):
                 a = crv[i,0:2]
                 b = crv[i+1,0:2]
                 area += np.linalg.det(np.array([a,b]))/2
-            plt.plot(crv[:,0], crv[:,1], 'k')
+            plt.plot(crv[:,0], crv[:,1], 'k', linewidth=linewidth)
     return area
 
-def plot_laguerre(allcurves):
+def plot_laguerre(allcurves, linewidth=2):
     areas = []
     for curves in allcurves:
-        area = plot_laguerre_cell(curves)
+        area = plot_laguerre_cell(curves, linewidth=linewidth)
         areas.append(area)
     return areas
 
@@ -88,19 +88,26 @@ def compute_H_DH_from_laguerre(Y, beta, allcurves):
                     DH[i,i] -= hij
     return np.array(areas), DH
 
-def solve_ot(H_DH, psi, stoperr=1e-8):
+def solve_ot(H_DH, psi, nu=None, stoperr=1e-8, maxiter=10):
     N = len(psi)
     h,dh = H_DH(psi)
     it = 0
+    if nu is None:
+        nu = (4/N)*np.ones(N)
+    errs = []
     while True:
         dh = dh[0:N-1,0:N-1]
         h = h[0:N-1]
         d = np.zeros(N)
-        d[0:N-1] = -np.linalg.solve(dh, h - 4/N)
-        err = np.linalg.norm(h - 4/N)
-        print("it={}, error={}".format(it,err))
+        d[0:N-1] = -np.linalg.solve(dh, h - nu[0:N-1])
+        err = np.linalg.norm(h - nu[0:N-1])
+        errs += [err,]
+        print("it={}, error={}, ".format(it,err), end='')
         if err <= stoperr:
-            return psi
+            break 
+        if it > maxiter:
+            print("maxiter")
+            break
         t = 1
         d = d - min(d)
         psi0 = psi.copy()
@@ -112,4 +119,4 @@ def solve_ot(H_DH, psi, stoperr=1e-8):
                 break
             t = t/2
         it += 1
-    return psi
+    return psi, errs
